@@ -16,7 +16,9 @@ and lets you search them through a clean API and dashboard.
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
 
 </div>
-
+<div align="center">
+  <img src="assets/job-aggregator-demo.gif" alt="RemoteScope demo" width="900"/>
+</div>
 ---
 
 ## What it does
