@@ -1,0 +1,131 @@
+# ===========================
+# Remote Job Aggregator Config
+# ===========================
+spring:
+  application:
+    name: remote-job-aggregator
+
+  datasource:
+    url: jdbc:postgresql://localhost:5430/remotejobs
+    username: postgres
+    password: postgres
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+
+  flyway:
+    enabled: true
+    locations: classpath:migration
+
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterWrite=300s
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:your@gmail.com}
+    password: ${MAIL_PASSWORD:yourpassword}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+server:
+  port: 8081
+
+# ===========================
+# API Keys
+# ===========================
+api:
+#  adzuna:
+#    app-id: ${ADZUNA_APP_ID:}
+#    app-key: ${ADZUNA_APP_KEY:}
+#  jsearch:
+#    api-key: ${JSEARCH_API_KEY:}
+  remotive:
+    base-url: https://remotive.com/api/remote-jobs
+  remoteok:
+    base-url: https://remoteok.com/api
+  arbeitnow:
+    base-url: https://www.arbeitnow.com/api/job-board-api
+
+# ===========================
+# Scraper Config
+# ===========================
+scraper:
+  user-agent: "Mozilla/5.0 (compatible; RemoteJobBot/1.0; +https://github.com/yourname/remotejobs)"
+  request-delay-ms: 1500
+  timeout-seconds: 30
+  max-retries: 3
+  sources:
+    weworkremotely: https://weworkremotely.com/remote-jobs.rss
+    jobspresso: https://jobspresso.co/remote-work/
+    remoteco: https://remote.co/remote-jobs/
+    workingnomads: https://www.workingnomads.com/jobs
+    ycjobs: https://www.ycombinator.com/jobs
+
+# ===========================
+# Scheduler
+# ===========================
+scheduler:
+  cron: "0 0 6 * * *"   # 6 AM every day
+  enabled: true
+
+# ===========================
+# Notifications
+# ===========================
+notification:
+  email:
+    enabled: ${EMAIL_NOTIFICATION_ENABLED:false}
+    recipient: ${EMAIL_RECIPIENT:}
+#  telegram:
+#    enabled: ${TELEGRAM_ENABLED:false}
+#    bot-token: ${TELEGRAM_BOT_TOKEN:}
+#    chat-id: ${TELEGRAM_CHAT_ID:}
+
+# ===========================
+# Salary Estimation
+# ===========================
+salary:
+  estimation:
+    enabled: true
+
+# ===========================
+# Springdoc
+# ===========================
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /api-docs
+
+# ===========================
+# Logging
+# ===========================
+logging:
+  level:
+    com.remotejobs: DEBUG
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

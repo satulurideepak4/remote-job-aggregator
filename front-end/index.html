@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>RemoteScope — Job Aggregator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+          --bg: #0a0a0f;
+          --surface: #111118;
+          --surface2: #18181f;
+          --border: #25252f;
+          --border2: #2e2e3a;
+          --accent: #7c6af7;
+          --accent2: #a78bfa;
+          --accent-glow: rgba(124,106,247,0.18);
+          --green: #34d399;
+          --amber: #fbbf24;
+          --red: #f87171;
+          --blue: #60a5fa;
+          --text: #e8e8f0;
+          --text2: #9090a8;
+          --text3: #5a5a70;
+          --radius: 12px;
+          --radius-sm: 8px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+          font-family: 'DM Sans', sans-serif;
+          background: var(--bg);
+          color: var(--text);
+          min-height: 100vh;
+          overflow-x: hidden;
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+        /* ── Layout ── */
+        .layout { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+
+        /* ── Sidebar ── */
+        .sidebar {
+          background: var(--surface);
+          border-right: 1px solid var(--border);
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          position: sticky;
+          top: 0;
+          height: 100vh;
+          overflow-y: auto;
+        }
+
+        .logo {
+          padding: 28px 24px 20px;
+          border-bottom: 1px solid var(--border);
+        }
+        .logo-text {
+          font-family: 'Syne', sans-serif;
+          font-size: 22px;
+          font-weight: 800;
+          background: linear-gradient(135deg, var(--accent2), var(--accent));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          letter-spacing: -0.5px;
+        }
+        .logo-sub {
+          font-size: 11px;
+          color: var(--text3);
+          font-family: 'DM Mono', monospace;
+          margin-top: 3px;
+          letter-spacing: 0.8px;
+          text-transform: uppercase;
+        }
+
+        .sidebar-section { padding: 20px 16px 8px; }
+        .sidebar-label {
+          font-size: 10px;
+          font-family: 'DM Mono', monospace;
+          color: var(--text3);
+          text-transform: uppercase;
+          letter-spacing: 1.2px;
+          margin-bottom: 10px;
+          padding-left: 8px;
+        }
+
+        .filter-group { margin-bottom: 6px; }
+        .filter-group label {
+          display: block;
+          font-size: 12px;
+          color: var(--text2);
+          margin-bottom: 6px;
+          padding-left: 4px;
+        }
+
+        select, input[type="text"], input[type="number"] {
+          width: 100%;
+          background: var(--surface2);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          color: var(--text);
+          font-size: 13px;
+          font-family: 'DM Sans', sans-serif;
+          padding: 8px 10px;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+        select:focus, input:focus { border-color: var(--accent); }
+        select option { background: var(--surface2); }
+
+        .range-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+        .tech-tags {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 5px;
+          max-height: 130px;
+          overflow-y: auto;
+          padding: 2px;
+        }
+        .tech-tag {
+          font-size: 11px;
+          font-family: 'DM Mono', monospace;
+          padding: 4px 9px;
+          border-radius: 20px;
+          border: 1px solid var(--border2);
+          background: var(--surface2);
+          color: var(--text2);
+          cursor: pointer;
+          transition: all 0.15s;
+          user-select: none;
+          white-space: nowrap;
+        }
+        .tech-tag:hover { border-color: var(--accent); color: var(--accent2); }
+        .tech-tag.active {
+          background: var(--accent-glow);
+          border-color: var(--accent);
+          color: var(--accent2);
+        }
+
+        .btn-apply {
+          margin: 16px;
+          width: calc(100% - 32px);
+          padding: 11px;
+          background: linear-gradient(135deg, var(--accent), #9f7aea);
+          border: none;
+          border-radius: var(--radius-sm);
+          color: #fff;
+          font-size: 13px;
+          font-weight: 600;
+          font-family: 'Syne', sans-serif;
+          cursor: pointer;
+          letter-spacing: 0.3px;
+          transition: opacity 0.2s, transform 0.1s;
+        }
+        .btn-apply:hover { opacity: 0.88; }
+        .btn-apply:active { transform: scale(0.98); }
+
+        .btn-reset {
+          display: block;
+          margin: 0 16px 16px;
+          width: calc(100% - 32px);
+          padding: 9px;
+          background: transparent;
+          border: 1px solid var(--border2);
+          border-radius: var(--radius-sm);
+          color: var(--text2);
+          font-size: 12px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .btn-reset:hover { border-color: var(--text2); color: var(--text); }
+
+        .sidebar-footer {
+          margin-top: auto;
+          padding: 16px;
+          border-top: 1px solid var(--border);
+        }
+        .status-dot {
+          display: inline-block;
+          width: 7px; height: 7px;
+          border-radius: 50%;
+          background: var(--green);
+          margin-right: 6px;
+          box-shadow: 0 0 8px var(--green);
+          animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+        .status-text { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+        /* ── Main ── */
+        .main { display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* ── Topbar ── */
+        .topbar {
+          background: var(--surface);
+          border-bottom: 1px solid var(--border);
+          padding: 16px 28px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          position: sticky;
+          top: 0;
+          z-index: 10;
+        }
+
+        .search-wrap {
+          flex: 1;
+          max-width: 520px;
+          position: relative;
+        }
+        .search-icon {
+          position: absolute;
+          left: 12px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--text3);
+          font-size: 14px;
+        }
+        .search-input {
+          width: 100%;
+          padding: 10px 14px 10px 36px;
+          background: var(--surface2);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          font-size: 14px;
+          color: var(--text);
+          outline: none;
+          transition: border-color 0.2s;
+        }
+        .search-input:focus { border-color: var(--accent); }
+        .search-input::placeholder { color: var(--text3); }
+
+        .topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+        .btn-trigger {
+          padding: 9px 16px;
+          background: var(--surface2);
+          border: 1px solid var(--border2);
+          border-radius: var(--radius-sm);
+          color: var(--text2);
+          font-size: 12px;
+          font-family: 'DM Mono', monospace;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .btn-trigger:hover { border-color: var(--accent); color: var(--accent2); }
+        .btn-trigger.loading { opacity: 0.5; pointer-events: none; }
+
+        .results-meta {
+          font-size: 12px;
+          color: var(--text3);
+          font-family: 'DM Mono', monospace;
+          white-space: nowrap;
+        }
+        .results-meta span { color: var(--accent2); }
+
+        /* ── Stats strip ── */
+        .stats-strip {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 1px;
+          background: var(--border);
+          border-bottom: 1px solid var(--border);
+        }
+        .stat-card {
+          background: var(--surface);
+          padding: 18px 24px;
+          transition: background 0.2s;
+        }
+        .stat-card:hover { background: var(--surface2); }
+        .stat-label {
+          font-size: 11px;
+          color: var(--text3);
+          font-family: 'DM Mono', monospace;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          margin-bottom: 6px;
+        }
+        .stat-value {
+          font-family: 'Syne', sans-serif;
+          font-size: 26px;
+          font-weight: 700;
+          color: var(--text);
+          line-height: 1;
+        }
+        .stat-value.green { color: var(--green); }
+        .stat-value.accent { color: var(--accent2); }
+        .stat-value.amber { color: var(--amber); }
+        .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+        /* ── Content ── */
+        .content { flex: 1; padding: 24px 28px; }
+
+        /* ── Active filters ── */
+        .active-filters {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          margin-bottom: 16px;
+          min-height: 0;
+        }
+        .filter-chip {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          padding: 4px 10px;
+          background: var(--accent-glow);
+          border: 1px solid var(--accent);
+          border-radius: 20px;
+          font-size: 11px;
+          color: var(--accent2);
+          font-family: 'DM Mono', monospace;
+        }
+        .filter-chip .remove {
+          cursor: pointer;
+          opacity: 0.7;
+          font-size: 13px;
+          line-height: 1;
+          transition: opacity 0.2s;
+        }
+        .filter-chip .remove:hover { opacity: 1; }
+
+        /* ── Job grid ── */
+        .jobs-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+          gap: 14px;
+        }
+
+        /* ── Job card ── */
+        .job-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 20px;
+          cursor: pointer;
+          transition: all 0.2s;
+          position: relative;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        .job-card::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 2px;
+          background: linear-gradient(90deg, var(--accent), transparent);
+          opacity: 0;
+          transition: opacity 0.2s;
+        }
+        .job-card:hover {
+          border-color: var(--border2);
+          background: var(--surface2);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        .job-card:hover::before { opacity: 1; }
+
+        .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+        .company-avatar {
+          width: 40px; height: 40px;
+          border-radius: 10px;
+          background: var(--surface2);
+          border: 1px solid var(--border2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: 'Syne', sans-serif;
+          font-weight: 700;
+          font-size: 14px;
+          color: var(--accent2);
+          flex-shrink: 0;
+          text-transform: uppercase;
+        }
+        .card-title-group { flex: 1; min-width: 0; }
+        .card-title {
+          font-family: 'Syne', sans-serif;
+          font-size: 15px;
+          font-weight: 600;
+          color: var(--text);
+          line-height: 1.3;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .card-company {
+          font-size: 12px;
+          color: var(--text2);
+          margin-top: 3px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .badge-row { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+        .badge {
+          font-size: 10px;
+          font-family: 'DM Mono', monospace;
+          padding: 3px 8px;
+          border-radius: 20px;
+          border: 1px solid;
+          white-space: nowrap;
+        }
+        .badge-remote-GLOBAL      { background: rgba(52,211,153,.1); border-color: rgba(52,211,153,.35); color: var(--green); }
+        .badge-remote-INDIA       { background: rgba(251,191,36,.1); border-color: rgba(251,191,36,.35); color: var(--amber); }
+        .badge-remote-REGION      { background: rgba(96,165,250,.1); border-color: rgba(96,165,250,.35); color: var(--blue); }
+        .badge-remote-UNKNOWN     { background: rgba(144,144,168,.1); border-color: rgba(144,144,168,.2); color: var(--text3); }
+        .badge-type-FULL          { background: rgba(167,139,250,.1); border-color: rgba(167,139,250,.3); color: var(--accent2); }
+        .badge-type-CONTRACT      { background: rgba(248,113,113,.1); border-color: rgba(248,113,113,.3); color: var(--red); }
+        .badge-type-PART          { background: rgba(96,165,250,.1); border-color: rgba(96,165,250,.3); color: var(--blue); }
+        .badge-source             { background: var(--surface2); border-color: var(--border2); color: var(--text3); }
+
+        .salary-line {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+        }
+        .salary-amount {
+          font-family: 'DM Mono', monospace;
+          font-size: 14px;
+          font-weight: 500;
+          color: var(--green);
+        }
+        .salary-estimated {
+          font-size: 10px;
+          color: var(--text3);
+          font-family: 'DM Mono', monospace;
+          background: var(--surface2);
+          padding: 2px 6px;
+          border-radius: 4px;
+        }
+        .exp-badge {
+          font-size: 11px;
+          color: var(--text2);
+          font-family: 'DM Mono', monospace;
+          margin-left: auto;
+        }
+
+        .tech-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px;
+        }
+        .tech-pill {
+          font-size: 10px;
+          font-family: 'DM Mono', monospace;
+          padding: 2px 7px;
+          background: var(--surface2);
+          border: 1px solid var(--border);
+          border-radius: 4px;
+          color: var(--text3);
+        }
+        .tech-more {
+          font-size: 10px;
+          color: var(--text3);
+          align-self: center;
+          font-family: 'DM Mono', monospace;
+        }
+
+        .card-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding-top: 10px;
+          border-top: 1px solid var(--border);
+        }
+        .card-date {
+          font-size: 11px;
+          color: var(--text3);
+          font-family: 'DM Mono', monospace;
+        }
+        .card-link {
+          font-size: 11px;
+          color: var(--accent2);
+          text-decoration: none;
+          font-family: 'DM Mono', monospace;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          transition: color 0.2s;
+        }
+        .card-link:hover { color: var(--accent); }
+
+        /* ── Pagination ── */
+        .pagination {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 8px;
+          padding: 28px 0 12px;
+        }
+        .page-btn {
+          width: 36px; height: 36px;
+          border-radius: var(--radius-sm);
+          border: 1px solid var(--border);
+          background: var(--surface);
+          color: var(--text2);
+          font-size: 13px;
+          font-family: 'DM Mono', monospace;
+          cursor: pointer;
+          transition: all 0.15s;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .page-btn:hover { border-color: var(--accent); color: var(--accent2); }
+        .page-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+        .page-btn:disabled { opacity: 0.3; pointer-events: none; }
+        .page-ellipsis { color: var(--text3); font-size: 13px; font-family: 'DM Mono', monospace; padding: 0 4px; }
+
+        /* ── Loading / Empty ── */
+        .loading-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+          gap: 14px;
+        }
+        .skeleton {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 20px;
+          height: 200px;
+          animation: shimmer 1.6s infinite;
+        }
+        @keyframes shimmer {
+          0%,100% { opacity: 0.6; }
+          50% { opacity: 1; }
+        }
+
+        .empty-state {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 80px 20px;
+          color: var(--text3);
+          text-align: center;
+          gap: 12px;
+        }
+        .empty-icon { font-size: 48px; opacity: 0.3; }
+        .empty-title { font-family: 'Syne', sans-serif; font-size: 20px; color: var(--text2); }
+        .empty-sub { font-size: 13px; max-width: 360px; line-height: 1.6; }
+
+        /* ── Toast ── */
+        .toast-container {
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          z-index: 100;
+        }
+        .toast {
+          padding: 12px 18px;
+          border-radius: var(--radius-sm);
+          font-size: 13px;
+          font-family: 'DM Mono', monospace;
+          border: 1px solid;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          animation: slideIn 0.3s ease;
+          max-width: 340px;
+        }
+        .toast-success { background: rgba(52,211,153,.12); border-color: rgba(52,211,153,.4); color: var(--green); }
+        .toast-error   { background: rgba(248,113,113,.12); border-color: rgba(248,113,113,.4); color: var(--red); }
+        .toast-info    { background: var(--accent-glow); border-color: rgba(124,106,247,.4); color: var(--accent2); }
+        @keyframes slideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to   { transform: translateX(0);    opacity: 1; }
+        }
+
+        /* ── Subscribe modal ── */
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.7);
+          backdrop-filter: blur(4px);
+          z-index: 50;
+          display: none;
+          align-items: center;
+          justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+          background: var(--surface);
+          border: 1px solid var(--border2);
+          border-radius: var(--radius);
+          padding: 28px;
+          width: 400px;
+          max-width: 94vw;
+        }
+        .modal-title {
+          font-family: 'Syne', sans-serif;
+          font-size: 18px;
+          font-weight: 700;
+          margin-bottom: 20px;
+        }
+        .modal label {
+          display: block;
+          font-size: 12px;
+          color: var(--text2);
+          margin-bottom: 6px;
+          margin-top: 14px;
+        }
+        .modal-footer {
+          display: flex;
+          gap: 10px;
+          margin-top: 22px;
+          justify-content: flex-end;
+        }
+        .btn-cancel {
+          padding: 9px 18px;
+          background: transparent;
+          border: 1px solid var(--border2);
+          border-radius: var(--radius-sm);
+          color: var(--text2);
+          cursor: pointer;
+          font-size: 13px;
+        }
+        .btn-subscribe {
+          padding: 9px 18px;
+          background: var(--accent);
+          border: none;
+          border-radius: var(--radius-sm);
+          color: #fff;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 600;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+          .layout { grid-template-columns: 1fr; }
+          .sidebar { display: none; }
+          .stats-strip { grid-template-columns: repeat(2,1fr); }
+          .jobs-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+        <div class="logo">
+            <div class="logo-text">RemoteScope</div>
+            <div class="logo-sub">Job Aggregator · v1.0</div>
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-label">Filters</div>
+
+            <div class="filter-group">
+                <label>Remote Eligibility</label>
+                <select id="f-remote">
+                    <option value="">All regions</option>
+                    <option value="GLOBAL">🌍 Global / Worldwide</option>
+                    <option value="INDIA_ALLOWED">🇮🇳 India Allowed</option>
+                    <option value="REGION_SPECIFIC">🌐 Region-specific</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Job Type</label>
+                <select id="f-type">
+                    <option value="">All types</option>
+                    <option value="FULL_TIME">Full-time</option>
+                    <option value="CONTRACT">Contract</option>
+                    <option value="PART_TIME">Part-time</option>
+                    <option value="INTERNSHIP">Internship</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Experience (years)</label>
+                <div class="range-row">
+                    <input type="number" id="f-exp-min" placeholder="Min" min="0" max="20"/>
+                    <input type="number" id="f-exp-max" placeholder="Max" min="0" max="20"/>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Salary / year (USD)</label>
+                <div class="range-row">
+                    <input type="number" id="f-sal-min" placeholder="Min" min="0" step="10000"/>
+                    <input type="number" id="f-sal-max" placeholder="Max" min="0" step="10000"/>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>Source</label>
+                <select id="f-source">
+                    <option value="">All sources</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Posted within</label>
+                <select id="f-days">
+                    <option value="">Any time</option>
+                    <option value="1">Last 24 hours</option>
+                    <option value="7">Last 7 days</option>
+                    <option value="14">Last 2 weeks</option>
+                    <option value="30">Last 30 days</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Tech Stack</label>
+                <div class="tech-tags" id="tech-tags">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-apply" onclick="applyFilters()">Apply Filters</button>
+        <button class="btn-reset" onclick="resetFilters()">↺ Reset all</button>
+
+        <div class="sidebar-footer">
+            <span class="status-dot"></span>
+            <span class="status-text" id="status-text">API connected</span>
+        </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <main class="main">
+
+        <!-- Topbar -->
+        <div class="topbar">
+            <div class="search-wrap">
+                <span class="search-icon">⌕</span>
+                <input class="search-input" id="search-input" type="text"
+                       placeholder="Search jobs, companies, tech…"
+                       oninput="debounceSearch(this.value)"/>
+            </div>
+            <div class="topbar-actions">
+                <div class="results-meta"><span id="total-count">0</span> jobs found</div>
+                <button class="btn-trigger" id="btn-trigger" onclick="triggerScrape()">
+                    ⟳ Run Scraper
+                </button>
+                <button class="btn-trigger" onclick="openModal()">
+                    🔔 Subscribe
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-strip">
+            <div class="stat-card">
+                <div class="stat-label">Total Jobs</div>
+                <div class="stat-value accent" id="s-total">—</div>
+                <div class="stat-sub">across all sources</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">India Allowed</div>
+                <div class="stat-value green" id="s-india">—</div>
+                <div class="stat-sub">remote eligible</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Global Remote</div>
+                <div class="stat-value amber" id="s-global">—</div>
+                <div class="stat-sub">worldwide open</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Sources</div>
+                <div class="stat-value" id="s-sources">—</div>
+                <div class="stat-sub">active scrapers</div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+
+            <!-- Active filter chips -->
+            <div class="active-filters" id="active-filters"></div>
+
+            <!-- Jobs -->
+            <div id="jobs-container"></div>
+
+            <!-- Pagination -->
+            <div class="pagination" id="pagination"></div>
+        </div>
+    </main>
+</div>
+
+<!-- ── Subscribe Modal ── -->
+<div class="modal-overlay" id="modal">
+    <div class="modal">
+        <div class="modal-title">🔔 Subscribe to Alerts</div>
+        <label>Channel</label>
+        <select id="sub-channel">
+            <option value="EMAIL">📧 Email</option>
+            <option value="TELEGRAM">✈️ Telegram</option>
+        </select>
+        <label>Email / Chat ID</label>
+        <input type="text" id="sub-dest" placeholder="your@email.com or Telegram chat ID"/>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="btn-subscribe" onclick="subscribe()">Subscribe</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Toast container ── -->
+<div class="toast-container" id="toasts"></div>
+
+<script>
+    // ── Config ────────────────────────────────────────────────────────────────────
+    const API = (window.API_BASE || 'http://localhost:8081') + '/api';
+
+    // ── State ─────────────────────────────────────────────────────────────────────
+    let state = {
+      page: 0,
+      size: 20,
+      total: 0,
+      totalPages: 0,
+      keyword: '',
+      remoteType: '',
+      jobType: '',
+      expMin: '',
+      expMax: '',
+      salaryMin: '',
+      salaryMax: '',
+      source: '',
+      daysAgo: '',
+      techStack: [],
+    };
+
+    const POPULAR_TECHS = [
+      'Java','Spring Boot','Python','JavaScript','TypeScript','Go','Rust','Kotlin',
+      'React','Node.js','AWS','Docker','Kubernetes','Kafka','PostgreSQL',
+      'MongoDB','Redis','GraphQL','Terraform','Microservices'
+    ];
+
+    let searchTimer = null;
+
+    // ── Init ──────────────────────────────────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', async () => {
+      renderTechTags();
+      await loadSources();
+      await fetchJobs();
+      await loadStats();
+    });
+
+    // ── Tech Tags ─────────────────────────────────────────────────────────────────
+    function renderTechTags() {
+      const container = document.getElementById('tech-tags');
+      container.innerHTML = POPULAR_TECHS.map(t => `
+        <span class="tech-tag ${state.techStack.includes(t) ? 'active' : ''}"
+              onclick="toggleTech('${t}')">${t}</span>
+      `).join('');
+    }
+
+    function toggleTech(tech) {
+      const idx = state.techStack.indexOf(tech);
+      if (idx >= 0) state.techStack.splice(idx, 1);
+      else state.techStack.push(tech);
+      renderTechTags();
+    }
+
+    // ── Sources ───────────────────────────────────────────────────────────────────
+    async function loadSources() {
+      try {
+        const sources = await apiFetch('/jobs/sources');
+        const sel = document.getElementById('f-source');
+        sources.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s; opt.textContent = s;
+          sel.appendChild(opt);
+        });
+        document.getElementById('s-sources').textContent = sources.length;
+      } catch(e) {
+        document.getElementById('s-sources').textContent = '?';
+      }
+    }
+
+    // ── Fetch Jobs ────────────────────────────────────────────────────────────────
+    async function fetchJobs() {
+      showLoading();
+      try {
+        const params = buildParams();
+        const data = await apiFetch('/jobs?' + params);
+        state.total = data.totalElements;
+        state.totalPages = data.totalPages;
+        document.getElementById('total-count').textContent = data.totalElements.toLocaleString();
+        renderJobs(data.content);
+        renderPagination();
+      } catch(e) {
+        showError('Failed to load jobs. Is the API running?');
+        document.getElementById('jobs-container').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⚠</div>
+            <div class="empty-title">API Unavailable</div>
+            <div class="empty-sub">Make sure the Spring Boot app is running on port 8081</div>
+          </div>`;
+        updateStatus(false);
+      }
+    }
+
+    function buildParams() {
+      const p = new URLSearchParams();
+      p.set('page', state.page);
+      p.set('size', state.size);
+      if (state.keyword)    p.set('keyword', state.keyword);
+      if (state.remoteType) p.set('remoteType', state.remoteType);
+      if (state.jobType)    p.set('jobType', state.jobType);
+      if (state.expMin)     p.set('expMin', state.expMin);
+      if (state.expMax)     p.set('expMax', state.expMax);
+      if (state.salaryMin)  p.set('salaryMin', state.salaryMin);
+      if (state.salaryMax)  p.set('salaryMax', state.salaryMax);
+      if (state.source)     p.set('source', state.source);
+      if (state.daysAgo)    p.set('daysAgo', state.daysAgo);
+      state.techStack.forEach(t => p.append('techStack', t));
+      return p.toString();
+    }
+
+    // ── Stats ─────────────────────────────────────────────────────────────────────
+    async function loadStats() {
+      try {
+        // India allowed
+        const india = await apiFetch('/jobs?remoteType=INDIA_ALLOWED&size=1');
+        document.getElementById('s-india').textContent = india.totalElements.toLocaleString();
+        // Global
+        const global = await apiFetch('/jobs?remoteType=GLOBAL&size=1');
+        document.getElementById('s-global').textContent = global.totalElements.toLocaleString();
+        // Total
+        const all = await apiFetch('/jobs?size=1');
+        document.getElementById('s-total').textContent = all.totalElements.toLocaleString();
+        updateStatus(true);
+      } catch(e) {
+        updateStatus(false);
+      }
+    }
+
+    // ── Render Jobs ───────────────────────────────────────────────────────────────
+    function renderJobs(jobs) {
+      const container = document.getElementById('jobs-container');
+      if (!jobs || jobs.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <div class="empty-title">No jobs found</div>
+            <div class="empty-sub">Try adjusting your filters or run the scraper to fetch fresh jobs.</div>
+          </div>`;
+        return;
+      }
+      container.innerHTML = `<div class="jobs-grid">${jobs.map(renderCard).join('')}</div>`;
+      renderActiveFilters();
+    }
+
+    function renderCard(job) {
+      const initials = (job.companyName || '?').slice(0,2).toUpperCase();
+      const remoteBadge = remoteLabel(job.remoteType);
+      const typeBadge = typeLabel(job.jobType);
+      const salary = formatSalary(job);
+      const exp = job.experienceMin != null
+        ? `${job.experienceMin}–${job.experienceMax ?? '∞'} yrs` : '';
+      const techs = (job.techStack || []).slice(0,5);
+      const moreCount = (job.techStack || []).length - 5;
+      const date = job.postedDate ? timeAgo(job.postedDate) : 'recently';
+
+      return `
+        <div class="job-card" onclick="window.open('${job.jobLink}','_blank')">
+          <div class="card-header">
+            <div class="company-avatar">${initials}</div>
+            <div class="card-title-group">
+              <div class="card-title" title="${esc(job.title)}">${esc(job.title)}</div>
+              <div class="card-company">${esc(job.companyName)}</div>
+            </div>
+          </div>
+
+          <div class="badge-row">
+            ${remoteBadge}
+            ${typeBadge}
+            <span class="badge badge-source">${esc(job.source)}</span>
+          </div>
+
+          <div class="salary-line">
+            <span class="salary-amount">${salary.text}</span>
+            ${salary.estimated ? '<span class="salary-estimated">est.</span>' : ''}
+            ${exp ? `<span class="exp-badge">⟐ ${exp}</span>` : ''}
+          </div>
+
+          ${techs.length ? `<div class="tech-row">
+            ${techs.map(t => `<span class="tech-pill">${esc(t)}</span>`).join('')}
+            ${moreCount > 0 ? `<span class="tech-more">+${moreCount}</span>` : ''}
+          </div>` : ''}
+
+          <div class="card-footer">
+            <span class="card-date">⏱ ${date}</span>
+            <a class="card-link" href="${job.jobLink}" target="_blank" onclick="event.stopPropagation()">
+              Apply ↗
+            </a>
+          </div>
+        </div>`;
+    }
+
+    // ── Pagination ────────────────────────────────────────────────────────────────
+    function renderPagination() {
+      const el = document.getElementById('pagination');
+      if (state.totalPages <= 1) { el.innerHTML = ''; return; }
+
+      const cur = state.page;
+      const total = state.totalPages;
+      let html = '';
+
+      const btn = (p, label, active=false, disabled=false) =>
+        `<button class="page-btn ${active?'active':''}" ${disabled?'disabled':''} onclick="goPage(${p})">${label}</button>`;
+
+      html += btn(cur-1, '‹', false, cur===0);
+
+      // Window of pages
+      const pages = [];
+      if (total <= 7) {
+        for (let i=0;i<total;i++) pages.push(i);
+      } else {
+        pages.push(0);
+        if (cur > 2) pages.push('...');
+        for (let i=Math.max(1,cur-1); i<=Math.min(total-2,cur+1); i++) pages.push(i);
+        if (cur < total-3) pages.push('...');
+        pages.push(total-1);
+      }
+
+      pages.forEach(p => {
+        if (p === '...') html += `<span class="page-ellipsis">…</span>`;
+        else html += btn(p, p+1, p===cur);
+      });
+
+      html += btn(cur+1, '›', false, cur===total-1);
+      el.innerHTML = html;
+    }
+
+    function goPage(p) {
+      state.page = p;
+      fetchJobs();
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    // ── Filters ───────────────────────────────────────────────────────────────────
+    function applyFilters() {
+      state.page = 0;
+      state.remoteType = document.getElementById('f-remote').value;
+      state.jobType    = document.getElementById('f-type').value;
+      state.expMin     = document.getElementById('f-exp-min').value;
+      state.expMax     = document.getElementById('f-exp-max').value;
+      state.salaryMin  = document.getElementById('f-sal-min').value;
+      state.salaryMax  = document.getElementById('f-sal-max').value;
+      state.source     = document.getElementById('f-source').value;
+      state.daysAgo    = document.getElementById('f-days').value;
+      fetchJobs();
+    }
+
+    function resetFilters() {
+      ['f-remote','f-type','f-source','f-days'].forEach(id => document.getElementById(id).value = '');
+      ['f-exp-min','f-exp-max','f-sal-min','f-sal-max'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('search-input').value = '';
+      state = { ...state, page:0, keyword:'', remoteType:'', jobType:'', expMin:'', expMax:'',
+        salaryMin:'', salaryMax:'', source:'', daysAgo:'', techStack:[] };
+      renderTechTags();
+      fetchJobs();
+    }
+
+    function renderActiveFilters() {
+      const chips = [];
+      if (state.keyword)    chips.push({ label:`"${state.keyword}"`, key:'keyword' });
+      if (state.remoteType) chips.push({ label: state.remoteType.replace('_',' '), key:'remoteType' });
+      if (state.jobType)    chips.push({ label: state.jobType.replace('_',' '), key:'jobType' });
+      if (state.expMin || state.expMax) chips.push({ label:`${state.expMin||0}–${state.expMax||'∞'} yrs`, key:'exp' });
+      if (state.source)     chips.push({ label:state.source, key:'source' });
+      if (state.daysAgo)    chips.push({ label:`Last ${state.daysAgo}d`, key:'daysAgo' });
+      state.techStack.forEach(t => chips.push({ label:t, key:`tech:${t}` }));
+
+      const el = document.getElementById('active-filters');
+      el.innerHTML = chips.map(c => `
+        <div class="filter-chip">
+          ${esc(c.label)}
+          <span class="remove" onclick="removeFilter('${c.key}')">×</span>
+        </div>`).join('');
+    }
+
+    function removeFilter(key) {
+      if (key.startsWith('tech:')) {
+        const tech = key.slice(5);
+        state.techStack = state.techStack.filter(t => t !== tech);
+        renderTechTags();
+      } else if (key === 'exp') { state.expMin = ''; state.expMax = ''; }
+      else state[key] = '';
+      state.page = 0;
+      fetchJobs();
+    }
+
+    // ── Search ────────────────────────────────────────────────────────────────────
+    function debounceSearch(val) {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        state.keyword = val;
+        state.page = 0;
+        fetchJobs();
+      }, 450);
+    }
+
+    // ── Scraper trigger ───────────────────────────────────────────────────────────
+    async function triggerScrape() {
+      const btn = document.getElementById('btn-trigger');
+      btn.classList.add('loading');
+      btn.textContent = '⟳ Running…';
+      try {
+        const res = await apiFetch('/admin/trigger', { method: 'POST' });
+        showToast(`✓ Scraper finished — ${res.newJobs} new jobs`, 'success');
+        await fetchJobs();
+        await loadStats();
+      } catch(e) {
+        showToast('⚠ Scraper failed or API unreachable', 'error');
+      } finally {
+        btn.classList.remove('loading');
+        btn.textContent = '⟳ Run Scraper';
+      }
+    }
+
+    // ── Subscribe ─────────────────────────────────────────────────────────────────
+    function openModal() { document.getElementById('modal').classList.add('open'); }
+    function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+    async function subscribe() {
+      const channel = document.getElementById('sub-channel').value;
+      const dest = document.getElementById('sub-dest').value.trim();
+      if (!dest) { showToast('Please enter a destination', 'error'); return; }
+      try {
+        await apiFetch('/subscriptions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channel, destination: dest })
+        });
+        showToast('✓ Subscribed successfully!', 'success');
+        closeModal();
+      } catch(e) {
+        showToast('Failed to subscribe', 'error');
+      }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────────
+    async function apiFetch(path, opts={}) {
+      const res = await fetch(API + path, opts);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    }
+
+    function showLoading() {
+      document.getElementById('jobs-container').innerHTML =
+        `<div class="loading-grid">${Array(8).fill('<div class="skeleton"></div>').join('')}</div>`;
+    }
+
+    function showError(msg) { console.error(msg); }
+
+    function updateStatus(ok) {
+      const el = document.getElementById('status-text');
+      const dot = document.querySelector('.status-dot');
+      el.textContent = ok ? 'API connected' : 'API offline';
+      dot.style.background = ok ? 'var(--green)' : 'var(--red)';
+      dot.style.boxShadow  = ok ? '0 0 8px var(--green)' : '0 0 8px var(--red)';
+    }
+
+    function showToast(msg, type='info') {
+      const el = document.createElement('div');
+      el.className = `toast toast-${type}`;
+      el.textContent = msg;
+      document.getElementById('toasts').appendChild(el);
+      setTimeout(() => el.remove(), 4000);
+    }
+
+    function remoteLabel(type) {
+      const map = {
+        GLOBAL: ['badge-remote-GLOBAL','🌍 Global'],
+        INDIA_ALLOWED: ['badge-remote-INDIA','🇮🇳 India OK'],
+        REGION_SPECIFIC: ['badge-remote-REGION','🌐 Region'],
+        UNKNOWN: ['badge-remote-UNKNOWN','Remote'],
+      };
+      const [cls, label] = map[type] || ['badge-remote-UNKNOWN','Remote'];
+      return `<span class="badge ${cls}">${label}</span>`;
+    }
+
+    function typeLabel(type) {
+      const map = {
+        FULL_TIME: ['badge-type-FULL','Full-time'],
+        CONTRACT: ['badge-type-CONTRACT','Contract'],
+        PART_TIME: ['badge-type-PART','Part-time'],
+        INTERNSHIP: ['badge-type-FULL','Internship'],
+      };
+      const [cls, label] = map[type] || ['badge-type-FULL','Full-time'];
+      return `<span class="badge ${cls}">${label}</span>`;
+    }
+
+    function formatSalary(job) {
+      if (!job.salaryMin && !job.salaryMax) return { text: 'Salary N/A', estimated: false };
+      const currency = job.salaryCurrency === 'USD' ? '$'
+        : job.salaryCurrency === 'GBP' ? '£'
+        : job.salaryCurrency === 'EUR' ? '€' : '$';
+      const fmt = n => n >= 1000 ? (n/1000).toFixed(0)+'k' : n;
+      const text = `${currency}${fmt(job.salaryMin)} – ${currency}${fmt(job.salaryMax)}`;
+      return { text, estimated: job.salaryEstimated };
+    }
+
+    function timeAgo(dateStr) {
+      const diff = Date.now() - new Date(dateStr).getTime();
+      const days = Math.floor(diff / 86400000);
+      if (days === 0) return 'today';
+      if (days === 1) return 'yesterday';
+      if (days < 7) return `${days}d ago`;
+      if (days < 30) return `${Math.floor(days/7)}w ago`;
+      return `${Math.floor(days/30)}mo ago`;
+    }
+
+    function esc(str) {
+      if (!str) return '';
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // Close modal on overlay click
+    document.getElementById('modal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+</script>
+</body>
+</html>
