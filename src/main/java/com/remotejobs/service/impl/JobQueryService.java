@@ -42,7 +42,8 @@ public class JobQueryService {
         // Tech stack filter uses native query
         if (filter.getTechStack() != null && !filter.getTechStack().isEmpty()) {
             String techs = "{" + String.join(",", filter.getTechStack()) + "}";
-            page = jobRepository.findByAnyTechStack(techs, pageable);
+            PageRequest nativePageable = PageRequest.of(filter.getPage(), filter.getSize());
+            page = jobRepository.findByAnyTechStack(techs, nativePageable);
         } else {
             Specification<Job> spec = JobSpecification.withFilters(
                     filter.getRemoteType() != null ? filter.getRemoteType().name() : null,

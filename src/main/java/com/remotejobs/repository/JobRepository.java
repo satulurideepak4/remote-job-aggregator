@@ -30,11 +30,15 @@ public interface JobRepository extends JpaRepository<Job, Long>,
     Page<Job> findByTechStack(@Param("tech") String tech, Pageable pageable);
 
     @Query(value = """
-        SELECT * FROM jobs
-        WHERE is_active = true
-          AND tech_stack && CAST(:techs AS TEXT[])
-        ORDER BY jobs.posted_date DESC NULLS LAST
-        """, nativeQuery = true)
+    SELECT * FROM jobs
+    WHERE is_active = true
+      AND tech_stack && CAST(:techs AS TEXT[])
+    ORDER BY posted_date DESC NULLS LAST
+    """, countQuery = """
+    SELECT COUNT(*) FROM jobs
+    WHERE is_active = true
+      AND tech_stack && CAST(:techs AS TEXT[])
+    """, nativeQuery = true)
     Page<Job> findByAnyTechStack(@Param("techs") String techs, Pageable pageable);
 
     @Query("SELECT DISTINCT j.source FROM Job j ORDER BY j.source")
