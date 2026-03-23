@@ -19,7 +19,6 @@ and lets you search them through a clean API and dashboard.
 <div align="center">
   <img src="assets/job-aggregator-demo.gif" alt="RemoteScope demo" width="900"/>
 </div>
----
 
 ## What it does
 
