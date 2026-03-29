@@ -6,9 +6,12 @@ spring:
     name: remote-job-aggregator
 
   datasource:
-    url: jdbc:postgresql://localhost:5430/remotejobs
-    username: postgres
-    password: postgres
+#    url: jdbc:postgresql://localhost:5430/remotejobs
+#    username: postgres
+#    password: postgres
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     hikari:
       maximum-pool-size: 10
       minimum-idle: 2
@@ -52,7 +55,8 @@ spring:
     default-property-inclusion: non_null
 
 server:
-  port: 8081
+  #port: 8081
+  port : ${PORT:8080}
 
 # ===========================
 # API Keys
