@@ -829,10 +829,10 @@
 
     // ── State ─────────────────────────────────────────────────────────────────────
     let state = {
-      page: 0,
+      page: 1,
       size: 20,
       total: 0,
-      totalPages: 0,
+      totalPages: 1,
       keyword: '',
       remoteType: '',
       jobType: '',
@@ -1031,9 +1031,9 @@
       // Window of pages
       const pages = [];
       if (total <= 7) {
-        for (let i=0;i<total;i++) pages.push(i);
+        for (let i=1;i<total;i++) pages.push(i);
       } else {
-        pages.push(0);
+        pages.push(1);
         if (cur > 2) pages.push('...');
         for (let i=Math.max(1,cur-1); i<=Math.min(total-2,cur+1); i++) pages.push(i);
         if (cur < total-3) pages.push('...');
@@ -1057,7 +1057,7 @@
 
     // ── Filters ───────────────────────────────────────────────────────────────────
     function applyFilters() {
-      state.page = 0;
+      state.page = 1;
       state.remoteType = document.getElementById('f-remote').value;
       state.jobType    = document.getElementById('f-type').value;
       state.expMin     = document.getElementById('f-exp-min').value;
@@ -1073,7 +1073,7 @@
       ['f-remote','f-type','f-source','f-days'].forEach(id => document.getElementById(id).value = '');
       ['f-exp-min','f-exp-max','f-sal-min','f-sal-max'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('search-input').value = '';
-      state = { ...state, page:0, keyword:'', remoteType:'', jobType:'', expMin:'', expMax:'',
+      state = { ...state, page:1, keyword:'', remoteType:'', jobType:'', expMin:'', expMax:'',
         salaryMin:'', salaryMax:'', source:'', daysAgo:'', techStack:[] };
       renderTechTags();
       fetchJobs();
@@ -1104,7 +1104,7 @@
         renderTechTags();
       } else if (key === 'exp') { state.expMin = ''; state.expMax = ''; }
       else state[key] = '';
-      state.page = 0;
+      state.page = 1;
       fetchJobs();
     }
 
@@ -1113,7 +1113,7 @@
       clearTimeout(searchTimer);
       searchTimer = setTimeout(() => {
         state.keyword = val;
-        state.page = 0;
+        state.page = 1;
         fetchJobs();
       }, 450);
     }
