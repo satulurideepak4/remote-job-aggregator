@@ -81,6 +81,27 @@
           text-transform: uppercase;
         }
 
+        .nav-links {
+          padding: 10px 12px;
+          border-bottom: 1px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+        .nav-link {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 12px;
+          border-radius: var(--radius-sm);
+          color: var(--text2);
+          text-decoration: none;
+          font-size: 13px;
+          transition: all 0.15s;
+        }
+        .nav-link:hover { background: var(--surface2); color: var(--text); }
+        .nav-link.active { background: var(--accent-glow); color: var(--accent2); }
+
         .sidebar-section { padding: 20px 16px 8px; }
         .sidebar-label {
           font-size: 10px;
@@ -664,6 +685,11 @@
         <div class="logo">
             <div class="logo-text">RemoteScope</div>
             <div class="logo-sub">Job Aggregator · v1.0</div>
+        </div>
+
+        <div class="nav-links">
+            <a class="nav-link active" href="index.html">⊞ Job Feed</a>
+            <a class="nav-link" href="outreach.html">◎ Outreach</a>
         </div>
 
         <div class="sidebar-section">

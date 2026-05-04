@@ -125,6 +125,17 @@ springdoc:
     path: /api-docs
 
 # ===========================
+# Outreach Dashboard
+# ===========================
+outreach:
+  product-hunt:
+    api-key: ${PRODUCT_HUNT_API_KEY:}
+    enabled: ${PRODUCT_HUNT_ENABLED:false}
+    cron: "0 0 7 * * *"   # 7 AM daily
+  twitter:
+    bearer-token: ${TWITTER_BEARER_TOKEN:}   # placeholder for future Twitter API v2
+
+# ===========================
 # Logging
 # ===========================
 logging:

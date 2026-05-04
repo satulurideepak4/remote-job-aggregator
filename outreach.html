@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>RemoteScope — Outreach Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+          --bg: #0a0a0f;
+          --surface: #111118;
+          --surface2: #18181f;
+          --border: #25252f;
+          --border2: #2e2e3a;
+          --accent: #7c6af7;
+          --accent2: #a78bfa;
+          --accent-glow: rgba(124,106,247,0.18);
+          --green: #34d399;
+          --amber: #fbbf24;
+          --red: #f87171;
+          --blue: #60a5fa;
+          --orange: #fb923c;
+          --text: #e8e8f0;
+          --text2: #9090a8;
+          --text3: #5a5a70;
+          --radius: 12px;
+          --radius-sm: 8px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+          font-family: 'DM Sans', sans-serif;
+          background: var(--bg);
+          color: var(--text);
+          min-height: 100vh;
+          overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+        /* ── Layout ── */
+        .layout { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+
+        /* ── Sidebar ── */
+        .sidebar {
+          background: var(--surface);
+          border-right: 1px solid var(--border);
+          padding: 0;
+          display: flex;
+          flex-direction: column;
+          position: sticky;
+          top: 0;
+          height: 100vh;
+          overflow-y: auto;
+        }
+
+        .logo {
+          padding: 28px 24px 20px;
+          border-bottom: 1px solid var(--border);
+        }
+        .logo-link { text-decoration: none; }
+        .logo-text {
+          font-family: 'Syne', sans-serif;
+          font-size: 22px;
+          font-weight: 800;
+          background: linear-gradient(135deg, var(--accent2), var(--accent));
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          letter-spacing: -0.5px;
+        }
+        .logo-sub {
+          font-size: 11px;
+          color: var(--text3);
+          font-family: 'DM Mono', monospace;
+          margin-top: 3px;
+          letter-spacing: 0.8px;
+          text-transform: uppercase;
+        }
+
+        .nav-section {
+          padding: 16px 12px 8px;
+          border-bottom: 1px solid var(--border);
+        }
+        .nav-label {
+          font-size: 10px;
+          font-family: 'DM Mono', monospace;
+          color: var(--text3);
+          text-transform: uppercase;
+          letter-spacing: 1.2px;
+          margin-bottom: 8px;
+          padding-left: 8px;
+        }
+        .nav-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 9px 12px;
+          border-radius: var(--radius-sm);
+          color: var(--text2);
+          text-decoration: none;
+          font-size: 13px;
+          transition: all 0.15s;
+          cursor: pointer;
+        }
+        .nav-item:hover { background: var(--surface2); color: var(--text); }
+        .nav-item.active { background: var(--accent-glow); color: var(--accent2); }
+        .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+
+        .sidebar-footer {
+          margin-top: auto;
+          padding: 16px;
+          border-top: 1px solid var(--border);
+        }
+        .status-dot {
+          display: inline-block;
+          width: 7px; height: 7px;
+          border-radius: 50%;
+          background: var(--green);
+          margin-right: 6px;
+          box-shadow: 0 0 8px var(--green);
+          animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+        .status-text { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+        /* ── Main ── */
+        .main { display: flex; flex-direction: column; min-height: 100vh; }
+
+        /* ── Topbar ── */
+        .topbar {
+          background: var(--surface);
+          border-bottom: 1px solid var(--border);
+          padding: 16px 28px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          position: sticky;
+          top: 0;
+          z-index: 10;
+        }
+        .topbar-title {
+          font-family: 'Syne', sans-serif;
+          font-size: 18px;
+          font-weight: 700;
+          color: var(--text);
+        }
+        .topbar-sub {
+          font-size: 12px;
+          color: var(--text3);
+          font-family: 'DM Mono', monospace;
+          margin-top: 2px;
+        }
+        .topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+        .btn {
+          padding: 9px 16px;
+          border-radius: var(--radius-sm);
+          font-size: 12px;
+          font-family: 'DM Mono', monospace;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          border: none;
+        }
+        .btn-ghost {
+          background: var(--surface2);
+          border: 1px solid var(--border2);
+          color: var(--text2);
+        }
+        .btn-ghost:hover { border-color: var(--accent); color: var(--accent2); }
+        .btn-primary {
+          background: linear-gradient(135deg, var(--accent), #9f7aea);
+          color: #fff;
+          font-weight: 600;
+        }
+        .btn-primary:hover { opacity: 0.88; }
+        .btn-sm { padding: 6px 12px; font-size: 11px; }
+        .btn-danger { background: rgba(248,113,113,0.15); border: 1px solid var(--red); color: var(--red); }
+        .btn-danger:hover { background: rgba(248,113,113,0.25); }
+
+        /* ── Stats Strip ── */
+        .stats-strip {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 1px;
+          background: var(--border);
+          border-bottom: 1px solid var(--border);
+        }
+        .stat-card {
+          background: var(--surface);
+          padding: 18px 24px;
+          transition: background 0.2s;
+        }
+        .stat-card:hover { background: var(--surface2); }
+        .stat-label {
+          font-size: 11px;
+          color: var(--text3);
+          font-family: 'DM Mono', monospace;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          margin-bottom: 6px;
+        }
+        .stat-value {
+          font-family: 'Syne', sans-serif;
+          font-size: 26px;
+          font-weight: 700;
+          color: var(--text);
+          line-height: 1;
+        }
+        .stat-value.accent { color: var(--accent2); }
+        .stat-value.green  { color: var(--green); }
+        .stat-value.blue   { color: var(--blue); }
+        .stat-value.amber  { color: var(--amber); }
+        .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+        /* ── Content ── */
+        .content { padding: 24px 28px; flex: 1; }
+
+        .section-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 16px;
+        }
+        .section-title {
+          font-family: 'Syne', sans-serif;
+          font-size: 16px;
+          font-weight: 700;
+        }
+
+        /* ── Signal Feed ── */
+        .signal-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 20px;
+          margin-bottom: 32px;
+        }
+        .signal-col {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          overflow: hidden;
+        }
+        .signal-col-header {
+          padding: 14px 16px;
+          border-bottom: 1px solid var(--border);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: var(--surface2);
+        }
+        .signal-col-title {
+          font-family: 'Syne', sans-serif;
+          font-size: 13px;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .signal-col-body {
+          max-height: 480px;
+          overflow-y: auto;
+          padding: 8px;
+        }
+
+        /* ── Signal Card ── */
+        .signal-card {
+          background: var(--bg);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          padding: 12px 14px;
+          margin-bottom: 8px;
+          transition: border-color 0.2s;
+        }
+        .signal-card:hover { border-color: var(--border2); }
+        .signal-card:last-child { margin-bottom: 0; }
+        .signal-company {
+          font-weight: 600;
+          font-size: 13px;
+          margin-bottom: 4px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .signal-company a { color: var(--text); text-decoration: none; }
+        .signal-company a:hover { color: var(--accent2); }
+        .signal-meta {
+          font-size: 11px;
+          color: var(--text3);
+          font-family: 'DM Mono', monospace;
+          margin-bottom: 6px;
+        }
+        .signal-snippet {
+          font-size: 12px;
+          color: var(--text2);
+          line-height: 1.5;
+          margin-bottom: 8px;
+        }
+        .signal-hiring-tag {
+          display: inline-block;
+          font-size: 10px;
+          font-family: 'DM Mono', monospace;
+          padding: 2px 8px;
+          border-radius: 20px;
+          background: rgba(52,211,153,0.12);
+          color: var(--green);
+          border: 1px solid rgba(52,211,153,0.3);
+          margin-bottom: 8px;
+        }
+        .signal-card-footer {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .signal-date { font-size: 10px; color: var(--text3); font-family: 'DM Mono', monospace; }
+        .upvotes-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 11px;
+          color: var(--amber);
+          font-family: 'DM Mono', monospace;
+        }
+
+        /* ── Filter row ── */
+        .filter-row {
+          display: flex;
+          gap: 8px;
+          padding: 8px;
+          border-bottom: 1px solid var(--border);
+          background: var(--surface);
+        }
+        .filter-row select, .filter-row input {
+          background: var(--surface2);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          color: var(--text);
+          font-size: 11px;
+          font-family: 'DM Mono', monospace;
+          padding: 5px 8px;
+          outline: none;
+          flex: 1;
+          transition: border-color 0.2s;
+        }
+        .filter-row select:focus, .filter-row input:focus { border-color: var(--accent); }
+
+        /* ── Tracker ── */
+        .tracker-section { margin-top: 8px; }
+        .tracker-controls {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 16px;
+          flex-wrap: wrap;
+        }
+        .tracker-controls select {
+          background: var(--surface2);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          color: var(--text);
+          font-size: 12px;
+          font-family: 'DM Mono', monospace;
+          padding: 7px 10px;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+        .tracker-controls select:focus { border-color: var(--accent); }
+
+        .table-wrap {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          overflow: hidden;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+        thead tr {
+          background: var(--surface2);
+          border-bottom: 1px solid var(--border);
+        }
+        th {
+          padding: 11px 14px;
+          font-size: 11px;
+          font-family: 'DM Mono', monospace;
+          color: var(--text3);
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          text-align: left;
+          font-weight: 500;
+          white-space: nowrap;
+        }
+        tbody tr {
+          border-bottom: 1px solid var(--border);
+          transition: background 0.15s;
+          cursor: pointer;
+        }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: var(--surface2); }
+        tbody tr.expanded { background: var(--surface2); }
+        td {
+          padding: 12px 14px;
+          font-size: 13px;
+          vertical-align: middle;
+        }
+        .td-company { font-weight: 600; }
+        .source-badge {
+          display: inline-block;
+          font-size: 10px;
+          font-family: 'DM Mono', monospace;
+          padding: 2px 8px;
+          border-radius: 20px;
+          border: 1px solid var(--border2);
+          color: var(--text2);
+          background: var(--surface2);
+          white-space: nowrap;
+        }
+        .source-badge.PRODUCT_HUNT { color: var(--amber); border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.08); }
+        .source-badge.LINKEDIN     { color: var(--blue);  border-color: rgba(96,165,250,0.3);  background: rgba(96,165,250,0.08); }
+        .source-badge.TWITTER      { color: var(--accent2); border-color: rgba(124,106,247,0.3); background: var(--accent-glow); }
+        .source-badge.MANUAL       { color: var(--text2); border-color: var(--border2); background: var(--surface2); }
+
+        .status-select {
+          background: transparent;
+          border: 1px solid transparent;
+          border-radius: 20px;
+          font-size: 11px;
+          font-family: 'DM Mono', monospace;
+          padding: 3px 8px;
+          cursor: pointer;
+          outline: none;
+          transition: all 0.2s;
+          appearance: none;
+          -webkit-appearance: none;
+        }
+        .status-select:hover { border-color: var(--border2); }
+        .status-select:focus { border-color: var(--accent); }
+        .status-select.PENDING       { color: var(--text2);  background: rgba(90,90,112,0.2); }
+        .status-select.SENT          { color: var(--blue);   background: rgba(96,165,250,0.12); }
+        .status-select.REPLIED       { color: var(--green);  background: rgba(52,211,153,0.12); }
+        .status-select.NOT_INTERESTED{ color: var(--red);    background: rgba(248,113,113,0.12); }
+        .status-select.GHOSTED       { color: var(--orange); background: rgba(251,146,60,0.12); }
+
+        /* ── Expanded row ── */
+        .expand-row { display: none; }
+        .expand-row.open { display: table-row; }
+        .expand-row td { background: var(--bg); padding: 16px 14px; }
+        .expand-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 12px;
+          margin-bottom: 12px;
+        }
+        .expand-field label {
+          display: block;
+          font-size: 10px;
+          color: var(--text3);
+          font-family: 'DM Mono', monospace;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          margin-bottom: 4px;
+        }
+        .expand-field input, .expand-field textarea {
+          width: 100%;
+          background: var(--surface2);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          color: var(--text);
+          font-size: 12px;
+          font-family: 'DM Sans', sans-serif;
+          padding: 7px 10px;
+          outline: none;
+          transition: border-color 0.2s;
+          resize: vertical;
+        }
+        .expand-field input:focus, .expand-field textarea:focus { border-color: var(--accent); }
+        .expand-actions { display: flex; gap: 8px; }
+        .empty-state {
+          text-align: center;
+          padding: 48px 24px;
+          color: var(--text3);
+          font-size: 13px;
+        }
+        .empty-icon { font-size: 32px; margin-bottom: 12px; }
+
+        /* ── Modal ── */
+        .modal-overlay {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.6);
+          backdrop-filter: blur(4px);
+          z-index: 100;
+          align-items: center;
+          justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+          background: var(--surface);
+          border: 1px solid var(--border2);
+          border-radius: var(--radius);
+          padding: 28px;
+          width: 100%;
+          max-width: 460px;
+          box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+        }
+        .modal-title {
+          font-family: 'Syne', sans-serif;
+          font-size: 18px;
+          font-weight: 700;
+          margin-bottom: 20px;
+        }
+        .modal label {
+          display: block;
+          font-size: 11px;
+          color: var(--text3);
+          font-family: 'DM Mono', monospace;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
+          margin-bottom: 4px;
+          margin-top: 12px;
+        }
+        .modal input, .modal textarea, .modal select {
+          width: 100%;
+          background: var(--surface2);
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          color: var(--text);
+          font-size: 13px;
+          font-family: 'DM Sans', sans-serif;
+          padding: 9px 12px;
+          outline: none;
+          transition: border-color 0.2s;
+          resize: vertical;
+        }
+        .modal input:focus, .modal textarea:focus, .modal select:focus { border-color: var(--accent); }
+        .modal select option { background: var(--surface2); }
+        .modal-footer {
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+          margin-top: 20px;
+        }
+        .btn-cancel {
+          padding: 9px 18px;
+          background: transparent;
+          border: 1px solid var(--border2);
+          border-radius: var(--radius-sm);
+          color: var(--text2);
+          font-size: 13px;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .btn-cancel:hover { border-color: var(--text2); color: var(--text); }
+        .btn-submit {
+          padding: 9px 20px;
+          background: linear-gradient(135deg, var(--accent), #9f7aea);
+          border: none;
+          border-radius: var(--radius-sm);
+          color: #fff;
+          font-size: 13px;
+          font-weight: 600;
+          font-family: 'Syne', sans-serif;
+          cursor: pointer;
+          transition: opacity 0.2s;
+        }
+        .btn-submit:hover { opacity: 0.88; }
+
+        /* ── Toast ── */
+        .toast-container {
+          position: fixed;
+          bottom: 24px;
+          right: 24px;
+          z-index: 200;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .toast {
+          background: var(--surface2);
+          border: 1px solid var(--border2);
+          border-radius: var(--radius-sm);
+          padding: 12px 18px;
+          font-size: 13px;
+          color: var(--text);
+          min-width: 220px;
+          animation: fadeIn 0.2s ease;
+          box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        .toast.success { border-color: var(--green); color: var(--green); }
+        .toast.error   { border-color: var(--red);   color: var(--red); }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+    </style>
+</head>
+<body>
+
+<div class="layout">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+        <div class="logo">
+            <a href="index.html" class="logo-link">
+                <div class="logo-text">RemoteScope</div>
+                <div class="logo-sub">Outreach Dashboard</div>
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-label">Navigation</div>
+            <a class="nav-item" href="index.html">
+                <span class="nav-icon">⊞</span> Job Feed
+            </a>
+            <a class="nav-item active" href="outreach.html">
+                <span class="nav-icon">◎</span> Outreach
+            </a>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-label">Signals</div>
+            <a class="nav-item" href="#signal-feed" onclick="scrollTo('signal-feed')">
+                <span class="nav-icon">🚀</span> Product Hunt
+            </a>
+            <a class="nav-item" href="#signal-feed" onclick="scrollTo('signal-feed')">
+                <span class="nav-icon">💼</span> LinkedIn
+            </a>
+            <a class="nav-item" href="#signal-feed" onclick="scrollTo('signal-feed')">
+                <span class="nav-icon">𝕏</span> Twitter/X
+            </a>
+            <a class="nav-item" href="#tracker" onclick="scrollTo('tracker')">
+                <span class="nav-icon">📋</span> Tracker
+            </a>
+        </div>
+
+        <div class="sidebar-footer">
+            <span class="status-dot"></span>
+            <span class="status-text" id="status-text">API connected</span>
+        </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <main class="main">
+
+        <!-- Topbar -->
+        <div class="topbar">
+            <div>
+                <div class="topbar-title">Outreach Dashboard</div>
+                <div class="topbar-sub">Hiring signals → cold outreach tracker</div>
+            </div>
+            <div class="topbar-actions">
+                <button class="btn btn-ghost" onclick="triggerProductHuntFetch()">
+                    ⟳ Fetch Product Hunt
+                </button>
+                <button class="btn btn-primary" onclick="openAddTargetModal()">
+                    + Add Company
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Strip -->
+        <div class="stats-strip">
+            <div class="stat-card">
+                <div class="stat-label">Companies Tracked</div>
+                <div class="stat-value accent" id="s-total">—</div>
+                <div class="stat-sub">in outreach pipeline</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Outreach Sent</div>
+                <div class="stat-value blue" id="s-sent">—</div>
+                <div class="stat-sub">emails / DMs sent</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Replies Received</div>
+                <div class="stat-value green" id="s-replied">—</div>
+                <div class="stat-sub">positive responses</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Reply Rate</div>
+                <div class="stat-value amber" id="s-rate">—%</div>
+                <div class="stat-sub">of sent outreach</div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+
+            <!-- ── Section 1: Signal Feed ── -->
+            <div id="signal-feed">
+                <div class="section-header" style="margin-bottom:20px;">
+                    <div class="section-title">Signal Feed</div>
+                </div>
+                <div class="signal-grid">
+
+                    <!-- Product Hunt Column -->
+                    <div class="signal-col">
+                        <div class="signal-col-header">
+                            <div class="signal-col-title">
+                                <span>🚀</span> Product Hunt Launches
+                            </div>
+                        </div>
+                        <div class="filter-row">
+                            <select id="ph-filter-days" onchange="loadProductHunt()">
+                                <option value="7">Last 7 days</option>
+                                <option value="30" selected>Last 30 days</option>
+                                <option value="90">Last 90 days</option>
+                            </select>
+                        </div>
+                        <div class="signal-col-body" id="ph-list">
+                            <div class="empty-state">
+                                <div class="empty-icon">🚀</div>
+                                Loading Product Hunt launches…
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LinkedIn Column -->
+                    <div class="signal-col">
+                        <div class="signal-col-header">
+                            <div class="signal-col-title">
+                                <span>💼</span> LinkedIn Hiring Signals
+                            </div>
+                            <button class="btn btn-ghost btn-sm" onclick="openLinkedInModal()">+ Add</button>
+                        </div>
+                        <div class="signal-col-body" id="li-list">
+                            <div class="empty-state">
+                                <div class="empty-icon">💼</div>
+                                No signals yet. Click "+ Add" to log a LinkedIn hiring post.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Twitter/X Column -->
+                    <div class="signal-col">
+                        <div class="signal-col-header">
+                            <div class="signal-col-title">
+                                <span>𝕏</span> Twitter/X Hiring Signals
+                            </div>
+                            <button class="btn btn-ghost btn-sm" onclick="openTwitterModal()">+ Add</button>
+                        </div>
+                        <div class="signal-col-body" id="tw-list">
+                            <div class="empty-state">
+                                <div class="empty-icon">𝕏</div>
+                                No signals yet. Click "+ Add" to log a hiring tweet.
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- ── Section 2: Tracker ── -->
+            <div id="tracker" class="tracker-section">
+                <div class="section-header">
+                    <div class="section-title">Outreach Tracker</div>
+                    <button class="btn btn-ghost btn-sm" onclick="exportCsv()">↓ Export CSV</button>
+                </div>
+
+                <div class="tracker-controls">
+                    <select id="filter-status" onchange="loadTargets()">
+                        <option value="">All statuses</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="SENT">Sent</option>
+                        <option value="REPLIED">Replied</option>
+                        <option value="NOT_INTERESTED">Not Interested</option>
+                        <option value="GHOSTED">Ghosted</option>
+                    </select>
+                    <select id="filter-source" onchange="loadTargets()">
+                        <option value="">All sources</option>
+                        <option value="PRODUCT_HUNT">Product Hunt</option>
+                        <option value="LINKEDIN">LinkedIn</option>
+                        <option value="TWITTER">Twitter/X</option>
+                        <option value="MANUAL">Manual</option>
+                    </select>
+                </div>
+
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Company</th>
+                                <th>Source</th>
+                                <th>Contact Name</th>
+                                <th>Role</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tracker-body">
+                            <tr>
+                                <td colspan="8">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">📋</div>
+                                        No companies tracked yet. Use "Add to Outreach" on a signal card or "+ Add Company".
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- ── LinkedIn Signal Modal ── -->
+<div class="modal-overlay" id="li-modal">
+    <div class="modal">
+        <div class="modal-title">💼 Add LinkedIn Signal</div>
+        <label>Company Name *</label>
+        <input type="text" id="li-company" placeholder="Acme Corp"/>
+        <label>Author Name</label>
+        <input type="text" id="li-author" placeholder="John Smith, CTO at Acme"/>
+        <label>Post URL</label>
+        <input type="url" id="li-url" placeholder="https://linkedin.com/posts/…"/>
+        <label>Post Snippet</label>
+        <textarea id="li-snippet" rows="3" placeholder="Paste the relevant part of the post…"></textarea>
+        <label>Hiring Signal</label>
+        <input type="text" id="li-signal" placeholder="Hiring senior engineers, scaling team 3x"/>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeLinkedInModal()">Cancel</button>
+            <button class="btn-submit" onclick="submitLinkedInSignal()">Save Signal</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Twitter Signal Modal ── -->
+<div class="modal-overlay" id="tw-modal">
+    <div class="modal">
+        <div class="modal-title">𝕏 Add Twitter/X Signal</div>
+        <label>Company Name *</label>
+        <input type="text" id="tw-company" placeholder="Acme Corp"/>
+        <label>Author Handle</label>
+        <input type="text" id="tw-handle" placeholder="@johndoe"/>
+        <label>Author Name</label>
+        <input type="text" id="tw-author" placeholder="John Doe"/>
+        <label>Tweet URL</label>
+        <input type="url" id="tw-url" placeholder="https://x.com/johndoe/status/…"/>
+        <label>Tweet Snippet</label>
+        <textarea id="tw-snippet" rows="3" placeholder="Paste the tweet text…"></textarea>
+        <label>Hiring Signal</label>
+        <input type="text" id="tw-signal" placeholder="We're hiring! Looking for a backend eng"/>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeTwitterModal()">Cancel</button>
+            <button class="btn-submit" onclick="submitTwitterSignal()">Save Signal</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Add to Outreach Modal ── -->
+<div class="modal-overlay" id="target-modal">
+    <div class="modal">
+        <div class="modal-title" id="target-modal-title">+ Add to Outreach</div>
+        <label>Company Name *</label>
+        <input type="text" id="t-company" placeholder="Acme Corp"/>
+        <label>Source</label>
+        <select id="t-source">
+            <option value="MANUAL">Manual</option>
+            <option value="PRODUCT_HUNT">Product Hunt</option>
+            <option value="LINKEDIN">LinkedIn</option>
+            <option value="TWITTER">Twitter/X</option>
+        </select>
+        <label>Company Website</label>
+        <input type="url" id="t-website" placeholder="https://acme.com"/>
+        <label>Contact Name</label>
+        <input type="text" id="t-contact" placeholder="Jane Doe"/>
+        <label>Contact Role</label>
+        <input type="text" id="t-role" placeholder="CTO / VP Eng / EM / CEO"/>
+        <label>Contact Email</label>
+        <input type="email" id="t-email" placeholder="jane@acme.com"/>
+        <label>Notes</label>
+        <textarea id="t-notes" rows="2" placeholder="From Product Hunt launch, Series A, 50 engineers…"></textarea>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeTargetModal()">Cancel</button>
+            <button class="btn-submit" onclick="submitTarget()">Add to Tracker</button>
+        </div>
+    </div>
+</div>
+
+<!-- ── Toast ── -->
+<div class="toast-container" id="toasts"></div>
+
+<script>
+    const API = (window.API_BASE || 'https://remote-job-aggregator.onrender.com') + '/api';
+
+    // ── Init ──────────────────────────────────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', async () => {
+        await Promise.all([
+            loadProductHunt(),
+            loadLinkedInSignals(),
+            loadTwitterSignals(),
+            loadTargets(),
+            loadStats(),
+        ]);
+    });
+
+    // ── API helper ────────────────────────────────────────────────────────────────
+    async function apiFetch(path, options = {}) {
+        const res = await fetch(API + path, {
+            headers: { 'Content-Type': 'application/json', ...options.headers },
+            ...options,
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ error: res.statusText }));
+            throw new Error(err.error || res.statusText);
+        }
+        if (res.status === 204) return null;
+        return res.json();
+    }
+
+    // ── Product Hunt ──────────────────────────────────────────────────────────────
+    async function loadProductHunt() {
+        const days = document.getElementById('ph-filter-days').value;
+        const list = document.getElementById('ph-list');
+        try {
+            const data = await apiFetch('/outreach/product-hunt?days=' + days);
+            if (!data || data.length === 0) {
+                list.innerHTML = `<div class="empty-state"><div class="empty-icon">🚀</div>No Product Hunt launches found for this period.<br><br><button class="btn btn-ghost btn-sm" onclick="triggerProductHuntFetch()">⟳ Fetch Now</button></div>`;
+                return;
+            }
+            list.innerHTML = data.map(c => renderProductHuntCard(c)).join('');
+        } catch(e) {
+            list.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div>Could not load Product Hunt data.</div>`;
+        }
+    }
+
+    function renderProductHuntCard(c) {
+        const date = formatDate(c.launchDate);
+        const website = c.websiteUrl ? `<a href="${esc(c.websiteUrl)}" target="_blank" style="color:var(--accent2);font-size:11px;font-family:'DM Mono',monospace;">↗ ${esc(truncate(c.websiteUrl, 30))}</a>` : '';
+        return `
+        <div class="signal-card">
+            <div class="signal-company">
+                ${esc(c.productName)}
+                ${website}
+            </div>
+            <div class="signal-meta">${c.makerNames ? 'by ' + esc(c.makerNames) : ''}</div>
+            <div class="signal-snippet">${esc(c.tagline || '')}</div>
+            <div class="signal-card-footer">
+                <span class="upvotes-badge">▲ ${c.upvotes || 0}</span>
+                <span class="signal-date">${date}</span>
+                <button class="btn btn-ghost btn-sm" onclick='addToOutreach(${JSON.stringify({
+                    companyName: c.productName,
+                    source: "PRODUCT_HUNT",
+                    companyWebsite: c.websiteUrl
+                })})'>+ Outreach</button>
+            </div>
+        </div>`;
+    }
+
+    async function triggerProductHuntFetch() {
+        showToast('Fetching Product Hunt launches…');
+        try {
+            const data = await apiFetch('/outreach/product-hunt/fetch', { method: 'POST' });
+            showToast(`Fetched ${data ? data.length : 0} new launches`, 'success');
+            await loadProductHunt();
+        } catch(e) {
+            showToast('Product Hunt fetch failed: ' + e.message, 'error');
+        }
+    }
+
+    // ── LinkedIn ──────────────────────────────────────────────────────────────────
+    async function loadLinkedInSignals() {
+        const list = document.getElementById('li-list');
+        try {
+            const data = await apiFetch('/outreach/linkedin-signals');
+            if (!data || data.length === 0) {
+                list.innerHTML = `<div class="empty-state"><div class="empty-icon">💼</div>No signals yet. Click "+ Add" to log a LinkedIn hiring post.</div>`;
+                return;
+            }
+            list.innerHTML = data.map(s => renderLinkedInCard(s)).join('');
+        } catch(e) {
+            list.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div>Could not load LinkedIn signals.</div>`;
+        }
+    }
+
+    function renderLinkedInCard(s) {
+        const link = s.postUrl ? `<a href="${esc(s.postUrl)}" target="_blank" style="color:var(--accent2);font-size:11px;font-family:'DM Mono',monospace;">↗ Post</a>` : '';
+        return `
+        <div class="signal-card">
+            <div class="signal-company">${esc(s.companyName)} ${link}</div>
+            <div class="signal-meta">${s.authorName ? 'via ' + esc(s.authorName) : ''}</div>
+            ${s.hiringSignal ? `<div class="signal-hiring-tag">${esc(s.hiringSignal)}</div>` : ''}
+            <div class="signal-snippet">${esc(s.postSnippet || '')}</div>
+            <div class="signal-card-footer">
+                <span class="signal-date">${formatDate(s.addedAt)}</span>
+                <button class="btn btn-ghost btn-sm" onclick='addToOutreach(${JSON.stringify({
+                    companyName: s.companyName,
+                    source: "LINKEDIN"
+                })})'>+ Outreach</button>
+            </div>
+        </div>`;
+    }
+
+    function openLinkedInModal() {
+        ['li-company','li-author','li-url','li-snippet','li-signal'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('li-modal').classList.add('open');
+    }
+    function closeLinkedInModal() {
+        document.getElementById('li-modal').classList.remove('open');
+    }
+
+    async function submitLinkedInSignal() {
+        const company = document.getElementById('li-company').value.trim();
+        if (!company) { showToast('Company name is required', 'error'); return; }
+        try {
+            await apiFetch('/outreach/linkedin-signal', {
+                method: 'POST',
+                body: JSON.stringify({
+                    companyName: company,
+                    authorName: document.getElementById('li-author').value.trim() || null,
+                    postUrl: document.getElementById('li-url').value.trim() || null,
+                    postSnippet: document.getElementById('li-snippet').value.trim() || null,
+                    hiringSignal: document.getElementById('li-signal').value.trim() || null,
+                })
+            });
+            showToast('LinkedIn signal saved', 'success');
+            closeLinkedInModal();
+            await loadLinkedInSignals();
+        } catch(e) {
+            showToast('Failed: ' + e.message, 'error');
+        }
+    }
+
+    // ── Twitter ───────────────────────────────────────────────────────────────────
+    async function loadTwitterSignals() {
+        const list = document.getElementById('tw-list');
+        try {
+            const data = await apiFetch('/outreach/twitter-signals');
+            if (!data || data.length === 0) {
+                list.innerHTML = `<div class="empty-state"><div class="empty-icon">𝕏</div>No signals yet. Click "+ Add" to log a hiring tweet.</div>`;
+                return;
+            }
+            list.innerHTML = data.map(s => renderTwitterCard(s)).join('');
+        } catch(e) {
+            list.innerHTML = `<div class="empty-state"><div class="empty-icon">⚠️</div>Could not load Twitter signals.</div>`;
+        }
+    }
+
+    function renderTwitterCard(s) {
+        const link = s.tweetUrl ? `<a href="${esc(s.tweetUrl)}" target="_blank" style="color:var(--accent2);font-size:11px;font-family:'DM Mono',monospace;">↗ Tweet</a>` : '';
+        const handle = s.authorHandle ? `<span style="color:var(--accent2);font-family:'DM Mono',monospace;font-size:11px;">@${esc(s.authorHandle)}</span>` : '';
+        return `
+        <div class="signal-card">
+            <div class="signal-company">${esc(s.companyName)} ${link}</div>
+            <div class="signal-meta">${handle}${s.authorName ? ' · ' + esc(s.authorName) : ''}</div>
+            ${s.hiringSignal ? `<div class="signal-hiring-tag">${esc(s.hiringSignal)}</div>` : ''}
+            <div class="signal-snippet">${esc(s.tweetSnippet || '')}</div>
+            <div class="signal-card-footer">
+                <span class="signal-date">${formatDate(s.addedAt)}</span>
+                <button class="btn btn-ghost btn-sm" onclick='addToOutreach(${JSON.stringify({
+                    companyName: s.companyName,
+                    source: "TWITTER"
+                })})'>+ Outreach</button>
+            </div>
+        </div>`;
+    }
+
+    function openTwitterModal() {
+        ['tw-company','tw-handle','tw-author','tw-url','tw-snippet','tw-signal'].forEach(id => document.getElementById(id).value = '');
+        document.getElementById('tw-modal').classList.add('open');
+    }
+    function closeTwitterModal() {
+        document.getElementById('tw-modal').classList.remove('open');
+    }
+
+    async function submitTwitterSignal() {
+        const company = document.getElementById('tw-company').value.trim();
+        if (!company) { showToast('Company name is required', 'error'); return; }
+        try {
+            await apiFetch('/outreach/twitter-signal', {
+                method: 'POST',
+                body: JSON.stringify({
+                    companyName: company,
+                    authorHandle: document.getElementById('tw-handle').value.trim() || null,
+                    authorName: document.getElementById('tw-author').value.trim() || null,
+                    tweetUrl: document.getElementById('tw-url').value.trim() || null,
+                    tweetSnippet: document.getElementById('tw-snippet').value.trim() || null,
+                    hiringSignal: document.getElementById('tw-signal').value.trim() || null,
+                })
+            });
+            showToast('Twitter signal saved', 'success');
+            closeTwitterModal();
+            await loadTwitterSignals();
+        } catch(e) {
+            showToast('Failed: ' + e.message, 'error');
+        }
+    }
+
+    // ── Outreach Tracker ──────────────────────────────────────────────────────────
+    let trackerData = [];
+
+    async function loadTargets() {
+        const status = document.getElementById('filter-status').value;
+        const source = document.getElementById('filter-source').value;
+        const params = new URLSearchParams();
+        if (status) params.set('status', status);
+        if (source) params.set('source', source);
+        try {
+            trackerData = await apiFetch('/outreach/targets?' + params.toString());
+            renderTracker();
+        } catch(e) {
+            document.getElementById('tracker-body').innerHTML = `
+                <tr><td colspan="8"><div class="empty-state"><div class="empty-icon">⚠️</div>Could not load tracker data.</div></td></tr>`;
+        }
+    }
+
+    function renderTracker() {
+        const tbody = document.getElementById('tracker-body');
+        if (!trackerData || trackerData.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">📋</div>No companies tracked yet.</div></td></tr>`;
+            return;
+        }
+        tbody.innerHTML = trackerData.flatMap(t => [
+            `<tr onclick="toggleExpand(${t.id})" id="row-${t.id}">
+                <td class="td-company">${esc(t.companyName)}</td>
+                <td><span class="source-badge ${esc(t.source)}">${sourceLabel(t.source)}</span></td>
+                <td>${esc(t.contactName || '—')}</td>
+                <td style="color:var(--text2);font-size:12px;">${esc(t.contactRole || '—')}</td>
+                <td style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);">${esc(t.contactEmail || '—')}</td>
+                <td onclick="event.stopPropagation()">
+                    <select class="status-select ${esc(t.outreachStatus)}"
+                            id="status-${t.id}"
+                            onchange="updateStatus(${t.id}, this.value)">
+                        ${['PENDING','SENT','REPLIED','NOT_INTERESTED','GHOSTED'].map(s =>
+                            `<option value="${s}" ${t.outreachStatus === s ? 'selected' : ''}>${statusLabel(s)}</option>`
+                        ).join('')}
+                    </select>
+                </td>
+                <td style="color:var(--text2);font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(t.notes || '—')}</td>
+                <td onclick="event.stopPropagation()">
+                    <button class="btn btn-danger btn-sm" onclick="deleteTarget(${t.id})">✕</button>
+                </td>
+            </tr>`,
+            `<tr class="expand-row" id="expand-${t.id}">
+                <td colspan="8">
+                    <div class="expand-grid">
+                        <div class="expand-field">
+                            <label>Contact Name</label>
+                            <input type="text" id="e-contact-${t.id}" value="${esc(t.contactName || '')}" placeholder="Jane Doe"/>
+                        </div>
+                        <div class="expand-field">
+                            <label>Contact Role</label>
+                            <input type="text" id="e-role-${t.id}" value="${esc(t.contactRole || '')}" placeholder="CTO / VP Eng"/>
+                        </div>
+                        <div class="expand-field">
+                            <label>Contact Email</label>
+                            <input type="email" id="e-email-${t.id}" value="${esc(t.contactEmail || '')}" placeholder="jane@acme.com"/>
+                        </div>
+                        <div class="expand-field" style="grid-column:1/2">
+                            <label>Company Website</label>
+                            <input type="url" id="e-website-${t.id}" value="${esc(t.companyWebsite || '')}" placeholder="https://acme.com"/>
+                        </div>
+                        <div class="expand-field" style="grid-column:2/4">
+                            <label>Notes</label>
+                            <textarea id="e-notes-${t.id}" rows="2">${esc(t.notes || '')}</textarea>
+                        </div>
+                    </div>
+                    <div class="expand-actions">
+                        <button class="btn btn-primary btn-sm" onclick="saveExpanded(${t.id})">Save Changes</button>
+                        <button class="btn btn-ghost btn-sm" onclick="toggleExpand(${t.id})">Close</button>
+                    </div>
+                </td>
+            </tr>`
+        ]).join('');
+    }
+
+    function toggleExpand(id) {
+        const row = document.getElementById('row-' + id);
+        const expand = document.getElementById('expand-' + id);
+        const isOpen = expand.classList.contains('open');
+        // Close all
+        document.querySelectorAll('.expand-row.open').forEach(r => r.classList.remove('open'));
+        document.querySelectorAll('tbody tr.expanded').forEach(r => r.classList.remove('expanded'));
+        if (!isOpen) {
+            expand.classList.add('open');
+            row.classList.add('expanded');
+        }
+    }
+
+    async function saveExpanded(id) {
+        try {
+            await apiFetch('/outreach/targets/' + id, {
+                method: 'PATCH',
+                body: JSON.stringify({
+                    contactName: document.getElementById('e-contact-' + id).value.trim() || null,
+                    contactRole: document.getElementById('e-role-' + id).value.trim() || null,
+                    contactEmail: document.getElementById('e-email-' + id).value.trim() || null,
+                    companyWebsite: document.getElementById('e-website-' + id).value.trim() || null,
+                    notes: document.getElementById('e-notes-' + id).value.trim() || null,
+                })
+            });
+            showToast('Changes saved', 'success');
+            await loadTargets();
+            await loadStats();
+        } catch(e) {
+            showToast('Failed: ' + e.message, 'error');
+        }
+    }
+
+    async function updateStatus(id, status) {
+        const sel = document.getElementById('status-' + id);
+        try {
+            await apiFetch('/outreach/targets/' + id, {
+                method: 'PATCH',
+                body: JSON.stringify({ outreachStatus: status })
+            });
+            sel.className = 'status-select ' + status;
+            showToast('Status updated to ' + statusLabel(status), 'success');
+            await loadStats();
+        } catch(e) {
+            showToast('Failed: ' + e.message, 'error');
+        }
+    }
+
+    async function deleteTarget(id) {
+        if (!confirm('Remove this company from tracker?')) return;
+        try {
+            await apiFetch('/outreach/targets/' + id, { method: 'DELETE' });
+            showToast('Removed from tracker', 'success');
+            await loadTargets();
+            await loadStats();
+        } catch(e) {
+            showToast('Failed: ' + e.message, 'error');
+        }
+    }
+
+    // ── Add to Outreach modal ─────────────────────────────────────────────────────
+    function openAddTargetModal() {
+        addToOutreach({ companyName: '', source: 'MANUAL', companyWebsite: '' });
+    }
+
+    function addToOutreach({ companyName = '', source = 'MANUAL', companyWebsite = '' }) {
+        document.getElementById('t-company').value = companyName;
+        document.getElementById('t-source').value = source;
+        document.getElementById('t-website').value = companyWebsite;
+        document.getElementById('t-contact').value = '';
+        document.getElementById('t-role').value = '';
+        document.getElementById('t-email').value = '';
+        document.getElementById('t-notes').value = '';
+        document.getElementById('target-modal-title').textContent = '+ Add to Outreach' + (companyName ? ': ' + companyName : '');
+        document.getElementById('target-modal').classList.add('open');
+    }
+
+    function closeTargetModal() {
+        document.getElementById('target-modal').classList.remove('open');
+    }
+
+    async function submitTarget() {
+        const company = document.getElementById('t-company').value.trim();
+        if (!company) { showToast('Company name is required', 'error'); return; }
+        try {
+            await apiFetch('/outreach/targets', {
+                method: 'POST',
+                body: JSON.stringify({
+                    companyName: company,
+                    source: document.getElementById('t-source').value,
+                    companyWebsite: document.getElementById('t-website').value.trim() || null,
+                    contactName: document.getElementById('t-contact').value.trim() || null,
+                    contactRole: document.getElementById('t-role').value.trim() || null,
+                    contactEmail: document.getElementById('t-email').value.trim() || null,
+                    notes: document.getElementById('t-notes').value.trim() || null,
+                })
+            });
+            showToast('Added to outreach tracker', 'success');
+            closeTargetModal();
+            await loadTargets();
+            await loadStats();
+            document.getElementById('tracker').scrollIntoView({ behavior: 'smooth' });
+        } catch(e) {
+            showToast('Failed: ' + e.message, 'error');
+        }
+    }
+
+    // ── Stats ─────────────────────────────────────────────────────────────────────
+    async function loadStats() {
+        try {
+            const s = await apiFetch('/outreach/stats');
+            document.getElementById('s-total').textContent = s.totalTracked;
+            document.getElementById('s-sent').textContent = s.outreachSent;
+            document.getElementById('s-replied').textContent = s.repliesReceived;
+            document.getElementById('s-rate').textContent = s.replyRate + '%';
+        } catch(e) {
+            ['s-total','s-sent','s-replied','s-rate'].forEach(id => {
+                document.getElementById(id).textContent = '?';
+            });
+        }
+    }
+
+    // ── CSV Export ────────────────────────────────────────────────────────────────
+    function exportCsv() {
+        if (!trackerData || trackerData.length === 0) {
+            showToast('No data to export', 'error');
+            return;
+        }
+        const headers = ['Company', 'Source', 'Contact Name', 'Role', 'Email', 'Status', 'Notes', 'Website', 'Created'];
+        const rows = trackerData.map(t => [
+            t.companyName, t.source, t.contactName || '', t.contactRole || '',
+            t.contactEmail || '', t.outreachStatus, t.notes || '',
+            t.companyWebsite || '', formatDate(t.createdAt)
+        ].map(v => `"${String(v).replace(/"/g, '""')}"`));
+        const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'outreach-tracker-' + new Date().toISOString().slice(0,10) + '.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('CSV exported', 'success');
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────────
+    function esc(str) {
+        if (!str) return '';
+        return String(str)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    function truncate(str, n) {
+        if (!str) return '';
+        return str.length > n ? str.slice(0, n) + '…' : str;
+    }
+
+    function formatDate(dateStr) {
+        if (!dateStr) return '';
+        try {
+            return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        } catch(e) { return ''; }
+    }
+
+    function statusLabel(s) {
+        return { PENDING: 'Pending', SENT: 'Sent', REPLIED: 'Replied', NOT_INTERESTED: 'Not Interested', GHOSTED: 'Ghosted' }[s] || s;
+    }
+
+    function sourceLabel(s) {
+        return { PRODUCT_HUNT: '🚀 PH', LINKEDIN: '💼 LinkedIn', TWITTER: '𝕏 Twitter', MANUAL: 'Manual' }[s] || s;
+    }
+
+    function showToast(msg, type = '') {
+        const c = document.getElementById('toasts');
+        const t = document.createElement('div');
+        t.className = 'toast ' + type;
+        t.textContent = msg;
+        c.appendChild(t);
+        setTimeout(() => t.remove(), 3500);
+    }
+
+    function scrollTo(id) {
+        document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Close modals on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', e => {
+            if (e.target === overlay) overlay.classList.remove('open');
+        });
+    });
+</script>
+</body>
+</html>
